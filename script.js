@@ -1,11 +1,5 @@
 window.onload = function () {
     const form = document.getElementById('certificateForm');
-    const previewName = document.getElementById('previewName');
-    const previewCourse = document.getElementById('previewCourse');
-    const previewDate = document.getElementById('previewDate');
-    const previewBackground = document.getElementById('previewBackground');
-    const previewLogo = document.getElementById('previewLogo');
-    const previewSignature = document.getElementById('previewSignature');
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -19,31 +13,14 @@ window.onload = function () {
         const logoFile = document.getElementById('logo').files[0];
         const signatureFile = document.getElementById('signature').files[0];
 
-        // تحديث المعاينة
-        previewName.textContent = name;
-        previewCourse.textContent = course;
-        previewDate.textContent = date;
+        console.log("جارٍ إنشاء الشهادة...");
 
-        if (backgroundFile) {
-            previewBackground.src = URL.createObjectURL(backgroundFile);
-        } else {
-            previewBackground.src = "default-background.jpg"; // صورة افتراضية
+        try {
+            await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
+            console.log("تم إنشاء الشهادة بنجاح!");
+        } catch (error) {
+            console.error("حدث خطأ أثناء إنشاء الشهادة:", error);
         }
-
-        if (logoFile) {
-            previewLogo.src = URL.createObjectURL(logoFile);
-        } else {
-            previewLogo.src = "default-logo.png"; // شعار افتراضي
-        }
-
-        if (signatureFile) {
-            previewSignature.src = URL.createObjectURL(signatureFile);
-        } else {
-            previewSignature.src = "default-signature.png"; // توقيع افتراضي
-        }
-
-        // إنشاء الشهادة كملف PDF
-        await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
     });
 
     async function createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile) {
@@ -54,12 +31,16 @@ window.onload = function () {
             format: "a4",
         });
 
+        console.log("جارٍ تحميل الصور...");
+
         // إضافة خلفية (إذا تم رفعها أو استخدام افتراضية)
         const background = backgroundFile ? await loadImage(backgroundFile) : await loadImage("default-background.jpg");
+        console.log("الخلفية:", background);
         doc.addImage(background, "JPEG", 0, 0, 297, 210);
 
         // إضافة شعار (إذا تم رفعه أو استخدام افتراضي)
         const logo = logoFile ? await loadImage(logoFile) : await loadImage("default-logo.png");
+        console.log("الشعار:", logo);
         doc.addImage(logo, "PNG", 20, 20, 50, 50);
 
         // إضافة نص الشهادة
@@ -75,6 +56,7 @@ window.onload = function () {
 
         // إضافة توقيع (إذا تم رفعه أو استخدام افتراضي)
         const signature = signatureFile ? await loadImage(signatureFile) : await loadImage("default-signature.png");
+        console.log("التوقيع:", signature);
         doc.addImage(signature, "PNG", 200, 150, 70, 30);
 
         // إضافة رمز QR
@@ -91,23 +73,25 @@ window.onload = function () {
         doc.setLineWidth(1);
         doc.rect(10, 10, 277, 190);
 
-        // حفظ الملف
+        console.log("جارٍ حفظ الملف...");
         doc.save(`شهادة_${name}.pdf`);
     }
 
     function loadImage(file) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             const img = new Image();
             const reader = new FileReader();
             reader.onload = (e) => {
                 img.src = e.target.result;
                 img.onload = () => resolve(img);
+                img.onerror = (error) => reject(error);
             };
             if (file) {
                 reader.readAsDataURL(file);
             } else {
                 img.src = file;
                 img.onload = () => resolve(img);
+                img.onerror = (error) => reject(error);
             }
         });
     }
