@@ -1,13 +1,5 @@
 window.onload = function () {
     const form = document.getElementById('certificateForm');
-    const previewName = document.getElementById('previewName');
-    const previewCourse = document.getElementById('previewCourse');
-    const previewDate = document.getElementById('previewDate');
-    const previewBackground = document.getElementById('previewBackground');
-    const previewDecoration = document.getElementById('previewDecoration');
-    const downloadButton = document.getElementById('downloadButton');
-
-    let currentCertificateData = null; // لتخزين بيانات الشهادة الحالية
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -17,33 +9,6 @@ window.onload = function () {
         const course = document.getElementById('course').value;
         const backgroundType = document.getElementById('background').value;
         const decorationType = document.getElementById('decoration').value;
-
-        // تحديث المعاينة
-        previewName.textContent = name;
-        previewCourse.textContent = course;
-        previewDate.textContent = date;
-
-        // تعيين الزخرفة
-        switch (decorationType) {
-            case "star":
-                previewDecoration.className = "fas fa-star";
-                break;
-            case "trophy":
-                previewDecoration.className = "fas fa-trophy";
-                break;
-            case "certificate":
-                previewDecoration.className = "fas fa-certificate";
-                break;
-            case "medal":
-                previewDecoration.className = "fas fa-medal";
-                break;
-            case "award":
-                previewDecoration.className = "fas fa-award";
-                break;
-            case "ribbon":
-                previewDecoration.className = "fas fa-ribbon";
-                break;
-        }
 
         // تعيين الخلفية
         let backgroundUrl;
@@ -67,22 +32,9 @@ window.onload = function () {
                 backgroundUrl = "https://source.unsplash.com/800x600/?art";
                 break;
         }
-        previewBackground.src = backgroundUrl;
 
-        // تخزين بيانات الشهادة الحالية
-        currentCertificateData = { name, date, course, backgroundUrl, decorationType };
-
-        // إظهار زر التحميل
-        console.log("جارٍ إظهار زر التحميل...");
-        downloadButton.style.display = "block";
-    });
-
-    // حدث النقر على زر التحميل
-    downloadButton.addEventListener('click', async function () {
-        if (currentCertificateData) {
-            const { name, date, course, backgroundUrl, decorationType } = currentCertificateData;
-            await createCertificate(name, date, course, backgroundUrl, decorationType);
-        }
+        // إنشاء الشهادة كملف PDF
+        await createCertificate(name, date, course, backgroundUrl, decorationType);
     });
 
     async function createCertificate(name, date, course, backgroundUrl, decorationType) {
