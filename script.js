@@ -1,13 +1,11 @@
 window.onload = function () {
     const form = document.getElementById('certificateForm');
-    const canvas = document.getElementById('certificateCanvas');
-    const ctx = canvas.getContext('2d');
-
-    // ملفات Base64
-    const arabicFontBase64 = "BASE64_DATA_FOR_Amiri-Regular.ttf"; // استبدل ببيانات Base64 للخط
-    const defaultBackgroundBase64 = "BASE64_DATA_FOR_default-background.jpg"; // استبدل ببيانات Base64 للخلفية
-    const defaultLogoBase64 = "BASE64_DATA_FOR_default-logo.png"; // استبدل ببيانات Base64 للشعار
-    const defaultSignatureBase64 = "BASE64_DATA_FOR_default-signature.png"; // استبدل ببيانات Base64 للتوقيع
+    const previewName = document.getElementById('previewName');
+    const previewCourse = document.getElementById('previewCourse');
+    const previewDate = document.getElementById('previewDate');
+    const previewBackground = document.getElementById('previewBackground');
+    const previewLogo = document.getElementById('previewLogo');
+    const previewSignature = document.getElementById('previewSignature');
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -21,7 +19,30 @@ window.onload = function () {
         const logoFile = document.getElementById('logo').files[0];
         const signatureFile = document.getElementById('signature').files[0];
 
-        // إنشاء الشهادة
+        // تحديث المعاينة
+        previewName.textContent = name;
+        previewCourse.textContent = course;
+        previewDate.textContent = date;
+
+        if (backgroundFile) {
+            previewBackground.src = URL.createObjectURL(backgroundFile);
+        } else {
+            previewBackground.src = "default-background.jpg"; // صورة افتراضية
+        }
+
+        if (logoFile) {
+            previewLogo.src = URL.createObjectURL(logoFile);
+        } else {
+            previewLogo.src = "default-logo.png"; // شعار افتراضي
+        }
+
+        if (signatureFile) {
+            previewSignature.src = URL.createObjectURL(signatureFile);
+        } else {
+            previewSignature.src = "default-signature.png"; // توقيع افتراضي
+        }
+
+        // إنشاء الشهادة كملف PDF
         await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
     });
 
@@ -33,17 +54,12 @@ window.onload = function () {
             format: "a4",
         });
 
-        // إضافة خط عربي
-        doc.addFileToVFS("Amiri-Regular.ttf", arabicFontBase64);
-        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
-        doc.setFont("Amiri"); // تعيين الخط العربي
-
         // إضافة خلفية (إذا تم رفعها أو استخدام افتراضية)
-        const background = backgroundFile ? await loadImage(backgroundFile) : await loadBase64Image(defaultBackgroundBase64);
+        const background = backgroundFile ? await loadImage(backgroundFile) : await loadImage("default-background.jpg");
         doc.addImage(background, "JPEG", 0, 0, 297, 210);
 
         // إضافة شعار (إذا تم رفعه أو استخدام افتراضي)
-        const logo = logoFile ? await loadImage(logoFile) : await loadBase64Image(defaultLogoBase64);
+        const logo = logoFile ? await loadImage(logoFile) : await loadImage("default-logo.png");
         doc.addImage(logo, "PNG", 20, 20, 50, 50);
 
         // إضافة نص الشهادة
@@ -58,7 +74,7 @@ window.onload = function () {
         doc.text(`بتاريخ: ${date}`, 40, 130);
 
         // إضافة توقيع (إذا تم رفعه أو استخدام افتراضي)
-        const signature = signatureFile ? await loadImage(signatureFile) : await loadBase64Image(defaultSignatureBase64);
+        const signature = signatureFile ? await loadImage(signatureFile) : await loadImage("default-signature.png");
         doc.addImage(signature, "PNG", 200, 150, 70, 30);
 
         // إضافة رمز QR
@@ -74,16 +90,6 @@ window.onload = function () {
         doc.setDrawColor(100, 100, 100);
         doc.setLineWidth(1);
         doc.rect(10, 10, 277, 190);
-
-        // عرض معاينة
-        const pdfData = doc.output('datauristring');
-        const pdfImage = new Image();
-        pdfImage.src = pdfData;
-        pdfImage.onload = () => {
-            canvas.width = pdfImage.width;
-            canvas.height = pdfImage.height;
-            ctx.drawImage(pdfImage, 0, 0);
-        };
 
         // حفظ الملف
         doc.save(`شهادة_${name}.pdf`);
@@ -103,14 +109,6 @@ window.onload = function () {
                 img.src = file;
                 img.onload = () => resolve(img);
             }
-        });
-    }
-
-    function loadBase64Image(base64) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.src = `data:image/png;base64,${base64}`;
-            img.onload = () => resolve(img);
         });
     }
 };
