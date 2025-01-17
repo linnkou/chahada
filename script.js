@@ -8,11 +8,15 @@ window.onload = function () {
         const date = document.getElementById('date').value;
         const course = document.getElementById('course').value;
 
-        createCertificate(name, date, course);
+        const backgroundFile = document.getElementById('background').files[0];
+        const logoFile = document.getElementById('logo').files[0];
+        const signatureFile = document.getElementById('signature').files[0];
+
+        createCertificate(name, date, course, backgroundFile, logoFile, signatureFile);
     });
 };
 
-async function createCertificate(name, date, course) {
+async function createCertificate(name, date, course, backgroundFile, logoFile, signatureFile) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({
         orientation: "landscape",
@@ -20,13 +24,17 @@ async function createCertificate(name, date, course) {
         format: "a4",
     });
 
-    // إضافة خلفية مزخرفة
-    const background = await loadImage("background.jpg");
-    doc.addImage(background, "JPEG", 0, 0, 297, 210); // A4 size in mm (landscape)
+    // إضافة خلفية (إذا تم رفعها)
+    if (backgroundFile) {
+        const background = await loadImage(backgroundFile);
+        doc.addImage(background, "JPEG", 0, 0, 297, 210); // A4 size in mm (landscape)
+    }
 
-    // إضافة شعار
-    const logo = await loadImage("logo.png");
-    doc.addImage(logo, "PNG", 20, 20, 50, 50);
+    // إضافة شعار (إذا تم رفعه)
+    if (logoFile) {
+        const logo = await loadImage(logoFile);
+        doc.addImage(logo, "PNG", 20, 20, 50, 50);
+    }
 
     // إضافة نص الشهادة
     doc.setFontSize(28);
@@ -41,9 +49,11 @@ async function createCertificate(name, date, course) {
     doc.text(`لإتمام دورة: ${course}`, 40, 110);
     doc.text(`بتاريخ: ${date}`, 40, 130);
 
-    // إضافة توقيع
-    const signature = await loadImage("signature.png");
-    doc.addImage(signature, "PNG", 200, 150, 70, 30);
+    // إضافة توقيع (إذا تم رفعه)
+    if (signatureFile) {
+        const signature = await loadImage(signatureFile);
+        doc.addImage(signature, "PNG", 200, 150, 70, 30);
+    }
 
     // إطار زخرفي
     doc.setDrawColor(100, 100, 100);
@@ -54,10 +64,14 @@ async function createCertificate(name, date, course) {
     doc.save(`شهادة_${name}.pdf`);
 }
 
-function loadImage(src) {
+function loadImage(file) {
     return new Promise((resolve) => {
         const img = new Image();
-        img.src = src;
-        img.onload = () => resolve(img);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            img.src = e.target.result;
+            img.onload = () => resolve(img);
+        };
+        reader.readAsDataURL(file);
     });
 }
