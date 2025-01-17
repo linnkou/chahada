@@ -3,7 +3,13 @@ window.onload = function () {
     const canvas = document.getElementById('certificateCanvas');
     const ctx = canvas.getContext('2d');
 
-    form.addEventListener('submit', function (event) {
+    // ملفات Base64
+    const arabicFontBase64 = "BASE64_DATA_FOR_Amiri-Regular.ttf";
+    const defaultBackgroundBase64 = "BASE64_DATA_FOR_default-background.jpg";
+    const defaultLogoBase64 = "BASE64_DATA_FOR_default-logo.png";
+    const defaultSignatureBase64 = "BASE64_DATA_FOR_default-signature.png";
+
+    form.addEventListener('submit', async function (event) {
         event.preventDefault();
 
         const name = document.getElementById('name').value;
@@ -15,7 +21,8 @@ window.onload = function () {
         const logoFile = document.getElementById('logo').files[0];
         const signatureFile = document.getElementById('signature').files[0];
 
-        createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
+        // إنشاء الشهادة
+        await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
     });
 
     async function createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile) {
@@ -26,29 +33,32 @@ window.onload = function () {
             format: "a4",
         });
 
+        // إضافة خط عربي
+        doc.addFileToVFS("Amiri-Regular.ttf", arabicFontBase64);
+        doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+        doc.setFont("Amiri"); // تعيين الخط العربي
+
         // إضافة خلفية (إذا تم رفعها أو استخدام افتراضية)
-        const background = backgroundFile ? await loadImage(backgroundFile) : await loadImage("default-background.jpg");
+        const background = backgroundFile ? await loadImage(backgroundFile) : await loadBase64Image(defaultBackgroundBase64);
         doc.addImage(background, "JPEG", 0, 0, 297, 210);
 
         // إضافة شعار (إذا تم رفعه أو استخدام افتراضي)
-        const logo = logoFile ? await loadImage(logoFile) : await loadImage("default-logo.png");
+        const logo = logoFile ? await loadImage(logoFile) : await loadBase64Image(defaultLogoBase64);
         doc.addImage(logo, "PNG", 20, 20, 50, 50);
 
         // إضافة نص الشهادة
         doc.setFontSize(28);
         doc.setTextColor(fontColor);
-        doc.setFont("helvetica", "bold");
         doc.text("شهادة إتمام الدورة", 148, 50, { align: 'center' });
 
         doc.setFontSize(18);
         doc.setTextColor(fontColor);
-        doc.setFont("helvetica", "normal");
         doc.text(`تم منح هذه الشهادة إلى: ${name}`, 40, 90);
         doc.text(`لإتمام دورة: ${course}`, 40, 110);
         doc.text(`بتاريخ: ${date}`, 40, 130);
 
         // إضافة توقيع (إذا تم رفعه أو استخدام افتراضي)
-        const signature = signatureFile ? await loadImage(signatureFile) : await loadImage("default-signature.png");
+        const signature = signatureFile ? await loadImage(signatureFile) : await loadBase64Image(defaultSignatureBase64);
         doc.addImage(signature, "PNG", 200, 150, 70, 30);
 
         // إضافة رمز QR
@@ -93,6 +103,14 @@ window.onload = function () {
                 img.src = file;
                 img.onload = () => resolve(img);
             }
+        });
+    }
+
+    function loadBase64Image(base64) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.src = `data:image/png;base64,${base64}`;
+            img.onload = () => resolve(img);
         });
     }
 };
