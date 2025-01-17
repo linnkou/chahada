@@ -4,10 +4,10 @@ window.onload = function () {
     const ctx = canvas.getContext('2d');
 
     // ملفات Base64
-    const arabicFontBase64 = "BASE64_DATA_FOR_Amiri-Regular.ttf";
-    const defaultBackgroundBase64 = "BASE64_DATA_FOR_default-background.jpg";
-    const defaultLogoBase64 = "BASE64_DATA_FOR_default-logo.png";
-    const defaultSignatureBase64 = "BASE64_DATA_FOR_default-signature.png";
+    const arabicFontBase64 = "BASE64_DATA_FOR_Amiri-Regular.ttf"; // استبدل ببيانات Base64 للخط
+    const defaultBackgroundBase64 = "BASE64_DATA_FOR_default-background.jpg"; // استبدل ببيانات Base64 للخلفية
+    const defaultLogoBase64 = "BASE64_DATA_FOR_default-logo.png"; // استبدل ببيانات Base64 للشعار
+    const defaultSignatureBase64 = "BASE64_DATA_FOR_default-signature.png"; // استبدل ببيانات Base64 للتوقيع
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
