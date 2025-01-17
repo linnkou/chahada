@@ -73,6 +73,7 @@ window.onload = function () {
         currentCertificateData = { name, date, course, backgroundUrl, decorationType };
 
         // إظهار زر التحميل
+        console.log("جارٍ إظهار زر التحميل...");
         downloadButton.style.display = "block";
     });
 
