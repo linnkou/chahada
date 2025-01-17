@@ -5,6 +5,9 @@ window.onload = function () {
     const previewDate = document.getElementById('previewDate');
     const previewBackground = document.getElementById('previewBackground');
     const previewDecoration = document.getElementById('previewDecoration');
+    const downloadButton = document.getElementById('downloadButton');
+
+    let currentCertificateData = null; // لتخزين بيانات الشهادة الحالية
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -31,6 +34,15 @@ window.onload = function () {
             case "certificate":
                 previewDecoration.className = "fas fa-certificate";
                 break;
+            case "medal":
+                previewDecoration.className = "fas fa-medal";
+                break;
+            case "award":
+                previewDecoration.className = "fas fa-award";
+                break;
+            case "ribbon":
+                previewDecoration.className = "fas fa-ribbon";
+                break;
         }
 
         // تعيين الخلفية
@@ -45,11 +57,31 @@ window.onload = function () {
             case "abstract":
                 backgroundUrl = "https://source.unsplash.com/800x600/?abstract";
                 break;
+            case "architecture":
+                backgroundUrl = "https://source.unsplash.com/800x600/?architecture";
+                break;
+            case "technology":
+                backgroundUrl = "https://source.unsplash.com/800x600/?technology";
+                break;
+            case "art":
+                backgroundUrl = "https://source.unsplash.com/800x600/?art";
+                break;
         }
         previewBackground.src = backgroundUrl;
 
-        // إنشاء الشهادة كملف PDF
-        await createCertificate(name, date, course, backgroundUrl, decorationType);
+        // تخزين بيانات الشهادة الحالية
+        currentCertificateData = { name, date, course, backgroundUrl, decorationType };
+
+        // إظهار زر التحميل
+        downloadButton.style.display = "block";
+    });
+
+    // حدث النقر على زر التحميل
+    downloadButton.addEventListener('click', async function () {
+        if (currentCertificateData) {
+            const { name, date, course, backgroundUrl, decorationType } = currentCertificateData;
+            await createCertificate(name, date, course, backgroundUrl, decorationType);
+        }
     });
 
     async function createCertificate(name, date, course, backgroundUrl, decorationType) {
@@ -112,6 +144,15 @@ window.onload = function () {
                     break;
                 case "certificate":
                     icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/certificate.svg";
+                    break;
+                case "medal":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/medal.svg";
+                    break;
+                case "award":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/award.svg";
+                    break;
+                case "ribbon":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/ribbon.svg";
                     break;
             }
             icon.onload = () => {
