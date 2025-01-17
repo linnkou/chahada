@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إنشاء شهادة PDF</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -19,17 +20,19 @@
             <label for="course">اسم الدورة:</label>
             <input type="text" id="course" name="course" required>
 
-            <label for="background">رفع خلفية (اختياري):</label>
-            <input type="file" id="background" name="background" accept="image/*">
+            <label for="background">اختر خلفية:</label>
+            <select id="background">
+                <option value="nature">طبيعة</option>
+                <option value="gradient">تدرج لوني</option>
+                <option value="abstract">تصميم مجرد</option>
+            </select>
 
-            <label for="logo">رفع شعار (اختياري):</label>
-            <input type="file" id="logo" name="logo" accept="image/*">
-
-            <label for="signature">رفع توقيع (اختياري):</label>
-            <input type="file" id="signature" name="signature" accept="image/*">
-
-            <label for="fontColor">لون الخط:</label>
-            <input type="color" id="fontColor" name="fontColor" value="#000000">
+            <label for="decoration">اختر زخرفة:</label>
+            <select id="decoration">
+                <option value="star">نجمة</option>
+                <option value="trophy">كأس</option>
+                <option value="certificate">شهادة</option>
+            </select>
 
             <button type="submit">إنشاء الشهادة</button>
         </form>
@@ -38,20 +41,18 @@
             <h2>معاينة الشهادة</h2>
             <div id="certificatePreview">
                 <img id="previewBackground" src="" alt="خلفية الشهادة">
-                <img id="previewLogo" src="" alt="شعار الشهادة">
+                <i id="previewDecoration" class="fas fa-star"></i>
                 <div id="previewText">
                     <h3>شهادة إتمام الدورة</h3>
                     <p>تم منح هذه الشهادة إلى: <span id="previewName"></span></p>
                     <p>لإتمام دورة: <span id="previewCourse"></span></p>
                     <p>بتاريخ: <span id="previewDate"></span></p>
                 </div>
-                <img id="previewSignature" src="" alt="توقيع الشهادة">
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
