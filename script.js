@@ -1,5 +1,64 @@
 window.onload = function () {
     const form = document.getElementById('certificateForm');
+    const canvas = document.getElementById('certificatePreview');
+    const ctx = canvas.getContext('2d');
+
+    // Load Arabic fonts
+    const fontFaces = [
+        new FontFace('Amiri', 'url(https://fonts.gstatic.com/s/amiri/v17/J7aRnpd8CGxBHpUrtLMA7w.woff2)'),
+        new FontFace('Cairo', 'url(https://fonts.gstatic.com/s/cairo/v10/SLXLc1nY6Hkvalrub46O.woff2)'),
+        new FontFace('Tajawal', 'url(https://fonts.gstatic.com/s/tajawal/v3/Iura6YBj_oCad4k1l8KiHrFHDQ.woff2)')
+    ];
+
+    Promise.all(fontFaces.map(font => font.load())).then(fonts => {
+        fonts.forEach(font => document.fonts.add(font));
+    });
+
+    // Set canvas size
+    canvas.width = 800;
+    canvas.height = 600;
+
+    // Function to update preview
+    function updatePreview() {
+        const name = document.getElementById('name').value || 'اسم المتدرب';
+        const date = document.getElementById('date').value || new Date().toISOString().split('T')[0];
+        const course = document.getElementById('course').value || 'اسم الدورة';
+        const background = document.getElementById('background').value;
+        const decoration = document.getElementById('decoration').value;
+        const fontFamily = document.getElementById('fontFamily').value;
+        const textColor = document.getElementById('textColor').value;
+        const borderColor = document.getElementById('borderColor').value;
+
+        // Clear canvas
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw border
+        ctx.strokeStyle = borderColor;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+        // Add title
+        ctx.font = `bold 36px ${fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.fillStyle = textColor;
+        ctx.fillText('شهادة إتمام', canvas.width / 2, 100);
+
+        // Add content
+        ctx.font = `24px ${fontFamily}`;
+        ctx.textAlign = 'right';
+        ctx.fillText(`الاسم: ${name}`, canvas.width - 100, 200);
+        ctx.fillText(`الدورة: ${course}`, canvas.width - 100, 250);
+        ctx.fillText(`التاريخ: ${date}`, canvas.width - 100, 300);
+    }
+
+    // Update preview on form changes
+    form.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', updatePreview);
+    });
+
+    // Initial preview
+    updatePreview();
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -7,23 +66,20 @@ window.onload = function () {
         const name = document.getElementById('name').value;
         const date = document.getElementById('date').value;
         const course = document.getElementById('course').value;
-        const fontColor = document.getElementById('fontColor').value;
-
-        const backgroundFile = document.getElementById('background').files[0];
-        const logoFile = document.getElementById('logo').files[0];
-        const signatureFile = document.getElementById('signature').files[0];
+        const background = document.getElementById('background').value;
+        const decoration = document.getElementById('decoration').value;
 
         console.log("جارٍ إنشاء الشهادة...");
 
         try {
-            await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
+            await createCertificate(name, date, course, background, decoration);
             console.log("تم إنشاء الشهادة بنجاح!");
         } catch (error) {
             console.error("حدث خطأ أثناء إنشاء الشهادة:", error);
         }
     });
 
-    async function createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile) {
+    async function createCertificate(name, date, course, background, decoration) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             orientation: "landscape",
@@ -31,68 +87,22 @@ window.onload = function () {
             format: "a4",
         });
 
-        console.log("جارٍ تحميل الصور...");
-
-        // إضافة خلفية (إذا تم رفعها أو استخدام افتراضية)
-        const background = backgroundFile ? await loadImage(backgroundFile) : await loadImage("default-background.jpg");
-        console.log("الخلفية:", background);
-        doc.addImage(background, "JPEG", 0, 0, 297, 210);
-
-        // إضافة شعار (إذا تم رفعه أو استخدام افتراضي)
-        const logo = logoFile ? await loadImage(logoFile) : await loadImage("default-logo.png");
-        console.log("الشعار:", logo);
-        doc.addImage(logo, "PNG", 20, 20, 50, 50);
-
-        // إضافة نص الشهادة
+        // Add certificate content
+        doc.setFont("helvetica");
         doc.setFontSize(28);
-        doc.setTextColor(fontColor);
         doc.text("شهادة إتمام الدورة", 148, 50, { align: 'center' });
 
         doc.setFontSize(18);
-        doc.setTextColor(fontColor);
         doc.text(`تم منح هذه الشهادة إلى: ${name}`, 40, 90);
         doc.text(`لإتمام دورة: ${course}`, 40, 110);
         doc.text(`بتاريخ: ${date}`, 40, 130);
 
-        // إضافة توقيع (إذا تم رفعه أو استخدام افتراضي)
-        const signature = signatureFile ? await loadImage(signatureFile) : await loadImage("default-signature.png");
-        console.log("التوقيع:", signature);
-        doc.addImage(signature, "PNG", 200, 150, 70, 30);
-
-        // إضافة رمز QR
-        const qrCodeData = `الاسم: ${name}\nالدورة: ${course}\nالتاريخ: ${date}`;
-        const qrCode = new QRCode(document.createElement("div"), {
-            text: qrCodeData,
-            width: 50,
-            height: 50,
-        });
-        doc.addImage(qrCode._el.firstChild, "PNG", 240, 20, 30, 30);
-
-        // إطار زخرفي
+        // Add border
         doc.setDrawColor(100, 100, 100);
         doc.setLineWidth(1);
         doc.rect(10, 10, 277, 190);
 
         console.log("جارٍ حفظ الملف...");
         doc.save(`شهادة_${name}.pdf`);
-    }
-
-    function loadImage(file) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                img.src = e.target.result;
-                img.onload = () => resolve(img);
-                img.onerror = (error) => reject(error);
-            };
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                img.src = file;
-                img.onload = () => resolve(img);
-                img.onerror = (error) => reject(error);
-            }
-        });
     }
 };
