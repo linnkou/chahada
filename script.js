@@ -80,29 +80,40 @@ window.onload = function () {
     });
 
     async function createCertificate(name, date, course, background, decoration) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({
-            orientation: "landscape",
-            unit: "mm",
-            format: "a4",
-        });
+        try {
+            const response = await fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name,
+                    date,
+                    course,
+                    background,
+                    decoration,
+                    fontFamily: document.getElementById('fontFamily').value,
+                    textColor: document.getElementById('textColor').value,
+                    borderColor: document.getElementById('borderColor').value
+                }),
+            });
 
-        // Add certificate content
-        doc.setFont("helvetica");
-        doc.setFontSize(28);
-        doc.text("شهادة إتمام الدورة", 148, 50, { align: 'center' });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
 
-        doc.setFontSize(18);
-        doc.text(`تم منح هذه الشهادة إلى: ${name}`, 40, 90);
-        doc.text(`لإتمام دورة: ${course}`, 40, 110);
-        doc.text(`بتاريخ: ${date}`, 40, 130);
-
-        // Add border
-        doc.setDrawColor(100, 100, 100);
-        doc.setLineWidth(1);
-        doc.rect(10, 10, 277, 190);
-
-        console.log("جارٍ حفظ الملف...");
-        doc.save(`شهادة_${name}.pdf`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `شهادة_${name}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء إنشاء الشهادة');
+        }
     }
 };
