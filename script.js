@@ -1,5 +1,10 @@
 window.onload = function () {
     const form = document.getElementById('certificateForm');
+    const previewName = document.getElementById('previewName');
+    const previewCourse = document.getElementById('previewCourse');
+    const previewDate = document.getElementById('previewDate');
+    const previewBackground = document.getElementById('previewBackground');
+    const previewDecoration = document.getElementById('previewDecoration');
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
@@ -7,23 +12,47 @@ window.onload = function () {
         const name = document.getElementById('name').value;
         const date = document.getElementById('date').value;
         const course = document.getElementById('course').value;
-        const fontColor = document.getElementById('fontColor').value;
+        const backgroundType = document.getElementById('background').value;
+        const decorationType = document.getElementById('decoration').value;
 
-        const backgroundFile = document.getElementById('background').files[0];
-        const logoFile = document.getElementById('logo').files[0];
-        const signatureFile = document.getElementById('signature').files[0];
+        // تحديث المعاينة
+        previewName.textContent = name;
+        previewCourse.textContent = course;
+        previewDate.textContent = date;
 
-        console.log("جارٍ إنشاء الشهادة...");
-
-        try {
-            await createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile);
-            console.log("تم إنشاء الشهادة بنجاح!");
-        } catch (error) {
-            console.error("حدث خطأ أثناء إنشاء الشهادة:", error);
+        // تعيين الزخرفة
+        switch (decorationType) {
+            case "star":
+                previewDecoration.className = "fas fa-star";
+                break;
+            case "trophy":
+                previewDecoration.className = "fas fa-trophy";
+                break;
+            case "certificate":
+                previewDecoration.className = "fas fa-certificate";
+                break;
         }
+
+        // تعيين الخلفية
+        let backgroundUrl;
+        switch (backgroundType) {
+            case "nature":
+                backgroundUrl = "https://source.unsplash.com/800x600/?nature";
+                break;
+            case "gradient":
+                backgroundUrl = "https://source.unsplash.com/800x600/?gradient";
+                break;
+            case "abstract":
+                backgroundUrl = "https://source.unsplash.com/800x600/?abstract";
+                break;
+        }
+        previewBackground.src = backgroundUrl;
+
+        // إنشاء الشهادة كملف PDF
+        await createCertificate(name, date, course, backgroundUrl, decorationType);
     });
 
-    async function createCertificate(name, date, course, fontColor, backgroundFile, logoFile, signatureFile) {
+    async function createCertificate(name, date, course, backgroundUrl, decorationType) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({
             orientation: "landscape",
@@ -31,68 +60,64 @@ window.onload = function () {
             format: "a4",
         });
 
-        console.log("جارٍ تحميل الصور...");
-
-        // إضافة خلفية (إذا تم رفعها أو استخدام افتراضية)
-        const background = backgroundFile ? await loadImage(backgroundFile) : await loadImage("default-background.jpg");
-        console.log("الخلفية:", background);
+        // إضافة خلفية
+        const background = await loadImage(backgroundUrl);
         doc.addImage(background, "JPEG", 0, 0, 297, 210);
-
-        // إضافة شعار (إذا تم رفعه أو استخدام افتراضي)
-        const logo = logoFile ? await loadImage(logoFile) : await loadImage("default-logo.png");
-        console.log("الشعار:", logo);
-        doc.addImage(logo, "PNG", 20, 20, 50, 50);
 
         // إضافة نص الشهادة
         doc.setFontSize(28);
-        doc.setTextColor(fontColor);
+        doc.setTextColor("#000000");
         doc.text("شهادة إتمام الدورة", 148, 50, { align: 'center' });
 
         doc.setFontSize(18);
-        doc.setTextColor(fontColor);
         doc.text(`تم منح هذه الشهادة إلى: ${name}`, 40, 90);
         doc.text(`لإتمام دورة: ${course}`, 40, 110);
         doc.text(`بتاريخ: ${date}`, 40, 130);
 
-        // إضافة توقيع (إذا تم رفعه أو استخدام افتراضي)
-        const signature = signatureFile ? await loadImage(signatureFile) : await loadImage("default-signature.png");
-        console.log("التوقيع:", signature);
-        doc.addImage(signature, "PNG", 200, 150, 70, 30);
-
-        // إضافة رمز QR
-        const qrCodeData = `الاسم: ${name}\nالدورة: ${course}\nالتاريخ: ${date}`;
-        const qrCode = new QRCode(document.createElement("div"), {
-            text: qrCodeData,
-            width: 50,
-            height: 50,
-        });
-        doc.addImage(qrCode._el.firstChild, "PNG", 240, 20, 30, 30);
+        // إضافة الزخرفة
+        const decorationIcon = await loadDecoration(decorationType);
+        doc.addImage(decorationIcon, "PNG", 240, 20, 30, 30);
 
         // إطار زخرفي
         doc.setDrawColor(100, 100, 100);
         doc.setLineWidth(1);
         doc.rect(10, 10, 277, 190);
 
-        console.log("جارٍ حفظ الملف...");
+        // حفظ الملف
         doc.save(`شهادة_${name}.pdf`);
     }
 
-    function loadImage(file) {
-        return new Promise((resolve, reject) => {
+    function loadImage(url) {
+        return new Promise((resolve) => {
             const img = new Image();
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                img.src = e.target.result;
-                img.onload = () => resolve(img);
-                img.onerror = (error) => reject(error);
-            };
-            if (file) {
-                reader.readAsDataURL(file);
-            } else {
-                img.src = file;
-                img.onload = () => resolve(img);
-                img.onerror = (error) => reject(error);
+            img.src = url;
+            img.onload = () => resolve(img);
+        });
+    }
+
+    function loadDecoration(decorationType) {
+        return new Promise((resolve) => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = 100;
+            canvas.height = 100;
+
+            const icon = new Image();
+            switch (decorationType) {
+                case "star":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/star.svg";
+                    break;
+                case "trophy":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/trophy.svg";
+                    break;
+                case "certificate":
+                    icon.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/svgs/solid/certificate.svg";
+                    break;
             }
+            icon.onload = () => {
+                ctx.drawImage(icon, 0, 0, 100, 100);
+                resolve(canvas.toDataURL());
+            };
         });
     }
 };
